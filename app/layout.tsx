@@ -18,27 +18,6 @@ export default function RootLayout({
   return (
     <html lang="sv">
       <body className={inter.className}>
-        <nav className="bg-blue-600 text-white p-4 shadow-lg">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold">
-              Svenska Kommuner
-            </Link>
-            <div className="flex gap-6">
-              <Link href="/" className="hover:underline">
-                Hem
-              </Link>
-              <Link href="/en" className="hover:underline">
-                English
-              </Link>
-              <Link href="/compare" className="hover:underline">
-                Jämför
-              </Link>
-              <Link href="/about" className="hover:underline">
-                Om
-              </Link>
-            </div>
-          </div>
-        </nav>
         {children}
         <footer className="bg-gray-800 text-white p-8 mt-12">
           <div className="container mx-auto text-center">
