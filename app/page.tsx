@@ -282,26 +282,26 @@ export default function HomePage() {
       {/* Header with SVG Flags */}
       <header className="bg-gradient-to-r from-amber-100 to-blue-100 text-gray-800 shadow-xl border-b-4 border-amber-300">
         <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <SwedishFlag size={60} />
               <div>
-                <h1 className="text-4xl font-bold text-gray-800">Sveriges Kommundata</h1>
-                <p className="text-gray-700 mt-1">Jämför alla Sveriges kommuner</p>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">Sveriges Kommundata</h1>
+                <p className="text-sm sm:text-base text-gray-700 mt-1">Jämför alla Sveriges kommuner</p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-3">
+
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
               <Link
                 href="/compare"
-                className="px-6 py-3 rounded-lg font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg"
+                className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg text-sm sm:text-base"
               >
                 ⚖️ Jämför
               </Link>
 
               <button
                 onClick={() => setShowCharts(!showCharts)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all shadow-lg ${
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all shadow-lg text-sm sm:text-base ${
                   showCharts
                     ? 'bg-amber-600 text-white'
                     : 'bg-white/80 hover:bg-white text-gray-800 border-2 border-amber-200'
@@ -310,10 +310,10 @@ export default function HomePage() {
                 <BarChart3 size={20} className="inline mr-2" />
                 {showCharts ? 'Dölj' : 'Visa'} Diagram
               </button>
-              
+
               <Link
                 href="/en"
-                className="px-6 py-3 rounded-lg font-medium bg-white/80 hover:bg-white text-gray-800 border-2 border-amber-200 transition-all shadow-lg flex items-center gap-2"
+                className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium bg-white/80 hover:bg-white text-gray-800 border-2 border-amber-200 transition-all shadow-lg flex items-center gap-2 text-sm sm:text-base"
               >
                 <BritishFlag size={24} />
                 <span>English</span>
