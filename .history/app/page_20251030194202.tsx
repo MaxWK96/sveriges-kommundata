@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import {
-  Search,
-  Filter,
+import { 
+  Search, 
+  Filter, 
   Heart,
   BarChart3,
   ChevronDown,
@@ -13,26 +13,20 @@ import {
   X,
   AlertCircle
 } from 'lucide-react'
-import MunicipalityCard from '@/components/MunicipalityCard'
 
 interface Municipality {
-  id: string
-  name: string
+  id: string  // UUID from Supabase
+  kommun: string  // FIXED: Swedish column name
   population: number
-  safety_score?: number | null  // 0-100 scale
+  sakerhet?: number | null  // FIXED: Swedish column name (1-10 scale)
   price_per_sqm?: number | null
-  school_rating?: number | null  // 0-100 scale
-  employment_rate?: number | null
+  skolbetyg?: number | null  // FIXED: Swedish column name (1-10 scale)
+  sysselsattning?: number | null  // FIXED: Swedish column name (percentage)
   utrikes_fodda?: number | null
-  tva_utrikes_foraldrar?: number | null
-  en_utrikes_foraldrar?: number | null
-  tva_inrikes_foraldrar?: number | null
-  utlandsk_bakgrund_total?: number | null
   procent_utlandsk_bakgrund?: number | null
-  top_fodelselander?: string | null
 }
 
-type SortField = 'name' | 'population' | 'safety_score' | 'price_per_sqm' | 'school_rating' | 'employment_rate' | 'procent_utlandsk_bakgrund'
+type SortField = 'kommun' | 'population' | 'sakerhet' | 'price_per_sqm' | 'skolbetyg' | 'sysselsattning' | 'procent_utlandsk_bakgrund'
 type SortOrder = 'asc' | 'desc'
 
 const ITEMS_PER_PAGE = 15
@@ -71,9 +65,9 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1)
   
   const [populationRange, setPopulationRange] = useState<[number, number]>([0, 1000000])
-  const [safetyRange, setSafetyRange] = useState<[number, number]>([0, 100])
+  const [safetyRange, setSafetyRange] = useState<[number, number]>([0, 10])
   const [housingRange, setHousingRange] = useState<[number, number]>([0, 100000])
-  const [schoolRange, setSchoolRange] = useState<[number, number]>([0, 100])
+  const [schoolRange, setSchoolRange] = useState<[number, number]>([0, 10])
   const [employmentRange, setEmploymentRange] = useState<[number, number]>([0, 100])
   const [foreignBackgroundRange, setForeignBackgroundRange] = useState<[number, number]>([0, 100])
 
@@ -116,13 +110,13 @@ export default function HomePage() {
   useEffect(() => {
     let filtered = municipalities.filter(m => {
       // SAFETY: Handle both 'kommun' and 'name' for backwards compatibility
-      const municipalityName = m.name || (m as any).name || ''
+      const municipalityName = m.kommun || (m as any).name || ''
       const matchesSearch = municipalityName.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesPopulation = m.population >= populationRange[0] && m.population <= populationRange[1]
-      const matchesSafety = (m.safety_score ?? 0) >= safetyRange[0] && (m.safety_score ?? 0) <= safetyRange[1]
+      const matchesSafety = (m.sakerhet ?? 0) >= safetyRange[0] && (m.sakerhet ?? 0) <= safetyRange[1]
       const matchesHousing = (m.price_per_sqm ?? 0) >= housingRange[0] && (m.price_per_sqm ?? 0) <= housingRange[1]
-      const matchesSchool = (m.school_rating ?? 0) >= schoolRange[0] && (m.school_rating ?? 0) <= schoolRange[1]
-      const matchesEmployment = (m.employment_rate ?? 0) >= employmentRange[0] && (m.employment_rate ?? 0) <= employmentRange[1]
+      const matchesSchool = (m.skolbetyg ?? 0) >= schoolRange[0] && (m.skolbetyg ?? 0) <= schoolRange[1]
+      const matchesEmployment = (m.sysselsattning ?? 0) >= employmentRange[0] && (m.sysselsattning ?? 0) <= employmentRange[1]
       
       // FIXED: Hantera både null och undefined för procent_utlandsk_bakgrund
       const foreignBg = m.procent_utlandsk_bakgrund ?? 0
@@ -155,58 +149,13 @@ export default function HomePage() {
   const resetFilters = () => {
     setSearchQuery('')
     setPopulationRange([0, 1000000])
-    setSafetyRange([0, 100])
+    setSafetyRange([0, 10])
     setHousingRange([0, 100000])
-    setSchoolRange([0, 100])
+    setSchoolRange([0, 10])
     setEmploymentRange([0, 100])
     setForeignBackgroundRange([0, 100])
     setCurrentPage(1)
   }
-
-  // Count active filters
-  const getActiveFilterCount = () => {
-    let count = 0
-    if (searchQuery) count++
-    if (populationRange[1] < 1000000) count++
-    if (safetyRange[0] > 0 || safetyRange[1] < 100) count++
-    if (housingRange[1] < 100000) count++
-    if (schoolRange[0] > 0 || schoolRange[1] < 100) count++
-    if (employmentRange[0] > 0 || employmentRange[1] < 100) count++
-    if (foreignBackgroundRange[1] < 100) count++
-    return count
-  }
-
-  const activeFilterCount = getActiveFilterCount()
-
-  // Calculate insights
-  const getInsights = () => {
-    if (municipalities.length === 0) return []
-
-    const safestMunicipality = [...municipalities]
-      .filter(m => m.safety_score != null)
-      .sort((a, b) => (b.safety_score || 0) - (a.safety_score || 0))[0]
-
-    const bestSchool = [...municipalities]
-      .filter(m => m.school_rating != null)
-      .sort((a, b) => (b.school_rating || 0) - (a.school_rating || 0))[0]
-
-    const highestForeignBackground = [...municipalities]
-      .filter(m => m.procent_utlandsk_bakgrund != null)
-      .sort((a, b) => (b.procent_utlandsk_bakgrund || 0) - (a.procent_utlandsk_bakgrund || 0))[0]
-
-    const mostExpensive = [...municipalities]
-      .filter(m => m.price_per_sqm != null)
-      .sort((a, b) => (b.price_per_sqm || 0) - (a.price_per_sqm || 0))[0]
-
-    return [
-      { text: `${safestMunicipality?.name} har högst säkerhetsvärde (${safestMunicipality?.safety_score?.toFixed(1)}/100)`, icon: '🛡️' },
-      { text: `${bestSchool?.name} har högst skolbetyg (${bestSchool?.school_rating?.toFixed(1)}/100)`, icon: '📚' },
-      { text: `${mostExpensive?.name} har dyrast bostadspris (${mostExpensive?.price_per_sqm?.toLocaleString('sv-SE')} kr/m²)`, icon: '🏠' },
-      { text: `${highestForeignBackground?.name} har störst andel utländsk bakgrund (${highestForeignBackground?.procent_utlandsk_bakgrund?.toFixed(1)}%)`, icon: '🌍' }
-    ]
-  }
-
-  const insights = getInsights()
 
   // Paginering
   const totalPages = Math.ceil(filteredMunicipalities.length / ITEMS_PER_PAGE)
@@ -222,10 +171,10 @@ export default function HomePage() {
   const chartData = {
     topByPopulation: [...filteredMunicipalities].slice(0, 10),
     averages: {
-      safety: filteredMunicipalities.reduce((sum, m) => sum + (m.safety_score ?? 0), 0) / filteredMunicipalities.length || 0,
+      safety: filteredMunicipalities.reduce((sum, m) => sum + (m.sakerhet ?? 0), 0) / filteredMunicipalities.length || 0,
       housing: filteredMunicipalities.reduce((sum, m) => sum + (m.price_per_sqm ?? 0), 0) / filteredMunicipalities.length || 0,
-      school: filteredMunicipalities.reduce((sum, m) => sum + (m.school_rating ?? 0), 0) / filteredMunicipalities.length || 0,
-      employment: filteredMunicipalities.reduce((sum, m) => sum + (m.employment_rate ?? 0), 0) / filteredMunicipalities.length || 0,
+      school: filteredMunicipalities.reduce((sum, m) => sum + (m.skolbetyg ?? 0), 0) / filteredMunicipalities.length || 0,
+      employment: filteredMunicipalities.reduce((sum, m) => sum + (m.sysselsattning ?? 0), 0) / filteredMunicipalities.length || 0,
     }
   }
 
@@ -299,6 +248,13 @@ export default function HomePage() {
                 ⚖️ Jämför
               </Link>
 
+              <Link
+                href="/map"
+                className="px-6 py-3 rounded-lg font-medium bg-white/80 hover:bg-white text-gray-800 border-2 border-amber-200 transition-all shadow-lg"
+              >
+                🗺️ Karta
+              </Link>
+
               <button
                 onClick={() => setShowCharts(!showCharts)}
                 className={`px-6 py-3 rounded-lg font-medium transition-all shadow-lg ${
@@ -324,41 +280,6 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-6 py-12">
-        {/* Last Updated & Insights Section */}
-        <div className="mb-8 space-y-4">
-          <div className="bg-gradient-to-r from-blue-50 to-amber-50 rounded-xl p-4 border-2 border-blue-200 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <span className="font-semibold">📅 Senast uppdaterat:</span>
-              <span>2024-01-15</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{municipalities.length} kommuner</span>
-            </div>
-          </div>
-
-          {/* Interesting Insights */}
-          {insights.length > 0 && (
-            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-amber-100">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                💡 Intressanta insikter
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {insights.map((insight, index) => (
-                  <div
-                    key={index}
-                    className="bg-gradient-to-br from-amber-50 to-blue-50 rounded-lg p-4 border border-amber-200 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{insight.icon}</span>
-                      <p className="text-sm text-gray-700 font-medium">{insight.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Search & Filter Bar */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border-2 border-amber-100">
           <div className="flex flex-col md:flex-row gap-4">
@@ -375,7 +296,7 @@ export default function HomePage() {
             
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2 relative ${
+              className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 showFilters
                   ? 'bg-amber-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -383,11 +304,6 @@ export default function HomePage() {
             >
               <Filter size={20} />
               Avancerade filter
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
               <ChevronDown size={16} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
             </button>
             
@@ -402,14 +318,14 @@ export default function HomePage() {
             >
               <option value="population-desc">Befolkning (Högst-Lägst)</option>
               <option value="population-asc">Befolkning (Lägst-Högst)</option>
-              <option value="safety_score-desc">Säkerhet (Högst-Lägst)</option>
-              <option value="safety_score-asc">Säkerhet (Lägst-Högst)</option>
-              <option value="school_rating-desc">Skolbetyg (Högst-Lägst)</option>
-              <option value="school_rating-asc">Skolbetyg (Lägst-Högst)</option>
+              <option value="sakerhet-desc">Säkerhet (Högst-Lägst)</option>
+              <option value="sakerhet-asc">Säkerhet (Lägst-Högst)</option>
+              <option value="skolbetyg-desc">Skolbetyg (Högst-Lägst)</option>
+              <option value="skolbetyg-asc">Skolbetyg (Lägst-Högst)</option>
               <option value="price_per_sqm-desc">Bostadspris (Högst-Lägst)</option>
               <option value="price_per_sqm-asc">Bostadspris (Lägst-Högst)</option>
-              <option value="employment_rate-desc">Sysselsättning (Högst-Lägst)</option>
-              <option value="employment_rate-asc">Sysselsättning (Lägst-Högst)</option>
+              <option value="sysselsattning-desc">Sysselsättning (Högst-Lägst)</option>
+              <option value="sysselsattning-asc">Sysselsättning (Lägst-Högst)</option>
               <option value="procent_utlandsk_bakgrund-desc">Utländsk bakgrund % (Högst-Lägst)</option>
               <option value="procent_utlandsk_bakgrund-asc">Utländsk bakgrund % (Lägst-Högst)</option>
             </select>
@@ -447,15 +363,15 @@ export default function HomePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Säkerhet (min): {safetyRange[0].toFixed(1)}/100
+                    Säkerhet (min): {safetyRange[0].toFixed(1)}/10
                   </label>
                   <input
                     type="range"
                     min="0"
-                    max="100"
-                    step="1"
+                    max="10"
+                    step="0.1"
                     value={safetyRange[0]}
-                    onChange={(e) => setSafetyRange([parseFloat(e.target.value), 100])}
+                    onChange={(e) => setSafetyRange([parseFloat(e.target.value), 10])}
                     className="w-full accent-amber-600"
                   />
                 </div>
@@ -477,15 +393,15 @@ export default function HomePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Skolbetyg (min): {schoolRange[0].toFixed(1)}/100
+                    Skolbetyg (min): {schoolRange[0].toFixed(1)}/10
                   </label>
                   <input
                     type="range"
                     min="0"
-                    max="100"
-                    step="1"
+                    max="10"
+                    step="0.1"
                     value={schoolRange[0]}
-                    onChange={(e) => setSchoolRange([parseFloat(e.target.value), 100])}
+                    onChange={(e) => setSchoolRange([parseFloat(e.target.value), 10])}
                     className="w-full accent-amber-600"
                   />
                 </div>
@@ -564,7 +480,7 @@ export default function HomePage() {
                   
                   return (
                     <div key={m.id} className="flex items-center gap-4">
-                      <div className="w-32 text-right font-medium text-gray-700">{m.name || (m as any).name || 'Okänd'}</div>
+                      <div className="w-32 text-right font-medium text-gray-700">{m.kommun || (m as any).name || 'Okänd'}</div>
                       <div className="flex-1">
                         <div className="bg-gray-200 rounded-full h-8 relative">
                           <div
@@ -586,7 +502,7 @@ export default function HomePage() {
         {/* Results Count & Pagination Info */}
         <div className="mb-6 flex items-center justify-between">
           <p className="text-gray-600">
-            Visar <span className="font-bold text-amber-700">{currentMunicipalities.length}</span> av {filteredMunicipalities.length} kommuner
+            Visar <span className="font-bold text-amber-700">{filteredMunicipalities.length}</span> av {municipalities.length} kommuner
             {filteredMunicipalities.length > 0 && (
               <span className="ml-2 text-sm">
                 (sida {currentPage} av {totalPages})
@@ -604,12 +520,76 @@ export default function HomePage() {
         {/* Municipality Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {currentMunicipalities.map((municipality) => (
-            <MunicipalityCard
+            <div
               key={municipality.id}
-              municipality={municipality}
-              isFavorite={favorites.includes(municipality.id)}
-              onToggleFavorite={() => toggleFavorite(municipality.id)}
-            />
+              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border-2 border-amber-100 hover:border-amber-300"
+            >
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-amber-700 transition">
+                      {municipality.kommun || (municipality as any).name || 'Okänd kommun'}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {municipality.population.toLocaleString('sv-SE')} invånare
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      toggleFavorite(municipality.id)
+                    }}
+                    className="p-2 rounded-full hover:bg-amber-50 transition"
+                  >
+                    <Heart
+                      size={24}
+                      className={favorites.includes(municipality.id) ? 'text-red-500' : 'text-gray-400'}
+                      fill={favorites.includes(municipality.id) ? 'currentColor' : 'none'}
+                    />
+                  </button>
+                </div>
+
+                <div className="space-y-3 mb-4">
+                  {municipality.sakerhet != null && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">🛡️ Säkerhet</span>
+                      <span className="font-semibold text-gray-800">{(municipality.sakerhet ?? 0).toFixed(1)}/10</span>
+                    </div>
+                  )}
+                  {municipality.skolbetyg != null && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">📚 Skolbetyg</span>
+                      <span className="font-semibold text-gray-800">{(municipality.skolbetyg ?? 0).toFixed(1)}/10</span>
+                    </div>
+                  )}
+                  {municipality.price_per_sqm != null && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">🏠 Bostadspris</span>
+                      <span className="font-semibold text-gray-800">{(municipality.price_per_sqm ?? 0).toLocaleString('sv-SE')} kr/m²</span>
+                    </div>
+                  )}
+                  {municipality.sysselsattning != null && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">💼 Sysselsättning</span>
+                      <span className="font-semibold text-gray-800">{(municipality.sysselsattning ?? 0).toFixed(1)}%</span>
+                    </div>
+                  )}
+                  {municipality.procent_utlandsk_bakgrund != null && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">🌍 Utländsk bakgrund</span>
+                      <span className="font-semibold text-gray-800">{(municipality.procent_utlandsk_bakgrund ?? 0).toFixed(1)}%</span>
+                    </div>
+                  )}
+                </div>
+
+                <Link
+                  href={`/municipality/${municipality.id}`}
+                  className="block w-full bg-amber-600 text-white text-center py-3 rounded-lg hover:bg-amber-700 transition font-medium"
+                >
+                  Visa detaljer →
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
 
@@ -684,55 +664,18 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-amber-100 to-blue-100 text-gray-800 py-8 mt-12 border-t-4 border-amber-300">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-6">
-            <p className="mb-4 font-medium">Data från SCB, Brå, Skolverket och andra officiella källor</p>
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <Link href="/about" className="hover:text-amber-700 font-medium">Om tjänsten</Link>
-              <span>•</span>
-              <Link href="/compare" className="hover:text-amber-700 font-medium">Jämför</Link>
-              <span>•</span>
-              <a href="https://twitter.com/DisturbingEU" target="_blank" rel="noopener noreferrer" className="hover:text-amber-700 font-medium">
-                @DisturbingEU
-              </a>
-            </div>
-          </div>
-
-          {/* Social Sharing Buttons */}
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <span className="text-sm font-medium text-gray-700">Dela:</span>
-            <button
-              onClick={() => {
-                const url = window.location.href
-                const text = 'Kolla in Sveriges Kommundata - Jämför alla Sveriges kommuner!'
-                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
-              }}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
-            >
-              🐦 Twitter
-            </button>
-            <button
-              onClick={() => {
-                const url = window.location.href
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
-              }}
-              className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
-            >
-              📘 Facebook
-            </button>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href)
-                alert('Länk kopierad!')
-              }}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
-            >
-              🔗 Kopiera länk
-            </button>
-          </div>
-
-          <div className="text-center text-sm text-gray-600">
-            <p>Skapad av <a href="https://twitter.com/DisturbingEU" target="_blank" rel="noopener noreferrer" className="text-amber-700 hover:text-amber-800 font-semibold">@DisturbingEU</a></p>
+        <div className="container mx-auto px-6 text-center">
+          <p className="mb-4 font-medium">Data från SCB, Brå, Skolverket och andra officiella källor</p>
+          <div className="flex items-center justify-center gap-4">
+            <Link href="/about" className="hover:text-amber-700 font-medium">Om tjänsten</Link>
+            <span>•</span>
+            <Link href="/compare" className="hover:text-amber-700 font-medium">Jämför</Link>
+            <span>•</span>
+            <Link href="/map" className="hover:text-amber-700 font-medium">Karta</Link>
+            <span>•</span>
+            <a href="https://twitter.com/dittTwitterHandle" target="_blank" rel="noopener noreferrer" className="hover:text-amber-700 font-medium">
+              Följ oss på Twitter
+            </a>
           </div>
         </div>
       </footer>
