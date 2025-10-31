@@ -105,14 +105,14 @@ export default function Home() {
         <p className="text-xl text-gray-600">
           Jämför säkerhet, skolbetyg, bostadspriser och utländsk bakgrund för Sveriges {municipalities.length} kommuner
         </p>
-        <div className="flex justify-center gap-4 mt-4">
-          <Link href="/en" className="text-blue-600 hover:underline">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mt-4">
+          <Link href="/en" className="text-blue-600 hover:underline text-sm sm:text-base">
             English
           </Link>
-          <Link href="/compare" className="text-blue-600 hover:underline">
+          <Link href="/compare" className="text-blue-600 hover:underline text-sm sm:text-base">
             Jämför kommuner
           </Link>
-          <Link href="/about" className="text-blue-600 hover:underline">
+          <Link href="/about" className="text-blue-600 hover:underline text-sm sm:text-base">
             Om tjänsten
           </Link>
         </div>

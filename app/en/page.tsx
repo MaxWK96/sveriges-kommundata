@@ -245,17 +245,17 @@ export default function EnglishHomePage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <Link
                 href="/compare"
-                className="px-6 py-3 rounded-lg font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg"
+                className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg text-sm sm:text-base"
               >
                 ⚖️ Compare
               </Link>
 
               <button
                 onClick={() => setShowCharts(!showCharts)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all shadow-lg ${
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all shadow-lg text-sm sm:text-base ${
                   showCharts
                     ? 'bg-amber-600 text-white'
                     : 'bg-white/80 hover:bg-white text-gray-800 border-2 border-amber-200'
@@ -264,10 +264,10 @@ export default function EnglishHomePage() {
                 <BarChart3 size={20} className="inline mr-2" />
                 {showCharts ? 'Hide' : 'Show'} Charts
               </button>
-              
+
               <Link
                 href="/"
-                className="px-6 py-3 rounded-lg font-medium bg-white/80 hover:bg-white text-gray-800 border-2 border-amber-200 transition-all shadow-lg flex items-center gap-2"
+                className="px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium bg-white/80 hover:bg-white text-gray-800 border-2 border-amber-200 transition-all shadow-lg flex items-center gap-2 text-sm sm:text-base"
               >
                 <SwedishFlag size={24} />
                 <span>Svenska</span>
